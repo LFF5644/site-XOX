@@ -1,3 +1,30 @@
 body{
 	font-family: arial,sans-serif;
 }
+button{
+	font-size: 1.5em;
+	background-color: darkgreen;
+	color:white;
+	border-color:yellow;
+	border-radius: 10px;
+	border-width: 4px;
+	margin: 5px 2px;
+}
+.xoxGrid{
+	user-select: none;
+	display: grid;
+	grid-template-columns: 100px 100px 100px;
+	grid-gap: 10px;
+}
+.xoxGrid>button{
+	aspect-ratio:1;
+}
+.xoxGrid>button[disabled],.xoxGrid>button{
+	color: white;
+	font-size: 2em;
+	background-color: blue;
+	border-color: green;
+	border-width: 10px;
+	border-radius: 10px;
+	margin: 0;
+}

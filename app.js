@@ -5,61 +5,46 @@ const {
 	hook_model,
 }=lui;
 
-function IndexGame({state,actions}){
-	let gameScreen=state.gameScreen.map(
-		item=>
+function IndexGame({state,actions}){return[
+	node_dom("div[className=xoxGrid]",null,
+		state.gameScreen
+		.map(item=>
 			item
 			?	state.playerPointer[item-1]
-			: 	"_"
-	);
-	let _0=0;
-	let _1=0;
-	let index=-1;
-	let tableChilds=[];
-	for(_0 of Array(3)){
-		let trChilds=[];
-		for(_1 of Array(3)){
-			index+=1;
-			const i=index;
-			trChilds.push(
-				node_dom("td",null,[
-					node_dom(`button`,{
-						innerText:gameScreen[index],
-						onclick:()=>{
-							actions.editGameScreen([i,state.playerTurn+1])
-						},
-					})
-				]),
-			);
-		}
-		tableChilds.push(node_dom("tr",null,trChilds));
-	}
-	return[
-		node_dom("table",null,tableChilds),
-	];
-}
+			: 	state.playerPointer[2]
+		)
+		.map((item,index)=>
+			node_dom("button",{
+				innerText:item,
+				disabled:item!==state.playerPointer[2],
+				onclick:()=>{
+					actions.editGameScreen([index,state.playerTurn+1])
+				},
+			}),
+		)
+	),
+]}
 
 const model={
-	init:()=>{
-		return{
-			playerNames:["Spieler 1","Spieler 2"],
-			playerPointer:["X","O"],
-			playerTurn:0,
-			gameScreen:[
-				0,0,2,
-				0,1,2,
-				1,0,1,
-			],
-		};
-	},
-	editGameScreen:(state,[index,value])=>({
-		...state,
+	init:()=>({
+		playerNames:["Spieler 1","Spieler 2"],
+		playerPointer:["X","O",""],
+		playerTurn:0,
 		gameScreen:[
-			...state.gameScreen.map((item,nowIndex)=>
-				nowIndex===index?value:item
-			),
+			0,0,2,
+			0,1,2,
+			1,0,1,
 		],
 	}),
+	editGameScreen:(state,[index,value])=>({
+		...state,
+		gameScreen:(
+			state.gameScreen.map((item,nowIndex)=>
+				nowIndex===index?value:item
+			)
+		),
+	}),
+
 	fillGameScreen:(state,fill=0)=>({
 		...state,
 		gameScreen: Array(9).fill(fill),
