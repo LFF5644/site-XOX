@@ -34,7 +34,62 @@ const model={
 		playerTurn:state.playerTurn?0:1,
 	}),
 };
+function checkForWin(gameScreen,state){
+	// ENDERS CHECKFORWIN FUNCTION!;
+	// return ARRAY LENGTH 2;
+	// RETURN //;
+	// [true,1] = player 2 wins;
+	// [true,0] = player 1 wins;
+	// [false,false] = nothing happens;
+	// [false,true]  = tie (unendschieden);
+	if(gameScreen.length!=9){
+		throw new Error("gameScreen.length is not 9");
+	}
+	if(gameScreen.some(item=>!(
+		typeof(item)==="number"&&
+		item>=0&&
+		item<=2
+	))){
+		throw new Error("gameScreen formart not allowed!");
+	}
 
+	let player;
+	for(player of [0,1]){
+		const winmsg=`${state.playerNames[player]} aka ${state.playerPointer[player]} hat das Spiel gewonnen!!!`;
+		const player_=player+1;
+		let y,x,pos;
+		for(y of [0,3,6]){
+			if(
+				gameScreen[y]===player_&&
+				gameScreen[y+1]===player_&&
+				gameScreen[y+2]===player_
+			){
+				alert(winmsg);
+				return[true,player];
+			}
+		}
+		for(x of [0,1,2]){
+			if(
+				gameScreen[x]===player_&&
+				gameScreen[x+3]===player_&&
+				gameScreen[x+6]===player_
+			){
+				alert(winmsg);
+				return[true,player];
+			}
+		}
+		for(pos of [0,2]){
+			if(
+				gameScreen[pos]===player_&&
+				gameScreen[4]===player_&&
+				gameScreen[8-pos]===player_
+			){
+				alert(winmsg);
+				return[true,player];
+			}
+		}
+	}
+}
 function IndexGame({state,actions}){return[
 	node_dom("p",{
 		innerText:`${state.playerNames[state.playerTurn]} ist dran und setzt ${state.playerPointer[state.playerTurn]}`,
@@ -65,7 +120,10 @@ init(()=>{
 		node_dom("h1[innerText=TicTacToe]"),
 		node(IndexGame,{state,actions}),
 		node_dom("button[innerText=Reset!]",{
-			onclick:()=>{actions.resetGameScreen();},
+			onclick:actions.resetGameScreen,
 		}),
+		node_dom("button[innerText=checkForWin()]",{
+			onclick:()=>{checkForWin(state.gameScreen,state);}
+		})
 	]];
 });
