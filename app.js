@@ -11,9 +11,9 @@ const model={
 		playerPointer:["X","O",""],
 		playerTurn:0,
 		gameScreen:[
-			0,0,2,
-			0,1,2,
-			1,0,1,
+			0,0,0,
+			0,0,0,
+			0,0,0,
 		],
 	}),
 	editGameScreen:(state,[index,value])=>({
@@ -27,21 +27,38 @@ const model={
 
 	resetGameScreen:(state)=>({
 		...state,
-		gameScreen: Array(9).fill(0),
+		playerTurn:0,
+		gameScreen:new Array(9).fill(0),
 	}),
-	toggelPlayer:(state)=>({
+	togglePlayer:(state)=>({
 		...state,
-		playerTurn:state.playerTurn?0:1,
+		playerTurn:state.playerTurn===1?0:1,
 	}),
 };
-function checkForWin(gameScreen,state){
+function checkForEnder(gameScreen){
+	const slot_player0="x";
+	const slot_player1="o";
+	const slot_air="-";
+	let newGameScreen=new Array(gameScreen.length).fill(0);
+	newGameScreen=newGameScreen.map((_item,index)=>{
+		const item=gameScreen[index];
+		if(item===slot_air){return 0;}
+		else if(item===slot_player0){return 1;}
+		else if(item===slot_player1){return 2;}
+		else{return -1;}
+	});
+	console.log(newGameScreen);
+	return checkForWin(newGameScreen);
+}
+function checkForWin(gameScreen){
 	// ENDERS CHECKFORWIN FUNCTION!;
 	// return ARRAY LENGTH 2;
 	// RETURN //;
-	// [true,1] = player 2 wins;
-	// [true,0] = player 1 wins;
-	// [false,false] = nothing happens;
-	// [false,true]  = tie (unendschieden);
+	// [1,1] = player 2 wins;
+	// [1,0] = player 1 wins;
+	// [0,0] = nothing happens;
+	// [0,1] = tie (unendschieden);
+	//;
 	if(gameScreen.length!=9){
 		throw new Error("gameScreen.length is not 9");
 	}
@@ -54,45 +71,52 @@ function checkForWin(gameScreen,state){
 	}
 
 	let player;
-	for(player of [0,1]){
-		const winmsg=`${state.playerNames[player]} aka ${state.playerPointer[player]} hat das Spiel gewonnen!!!`;
-		const player_=player+1;
+	for(player of [1,2]){
+		const playerID=player-1;
 		let y,x,pos;
 		for(y of [0,3,6]){
 			if(
-				gameScreen[y]===player_&&
-				gameScreen[y+1]===player_&&
-				gameScreen[y+2]===player_
+				gameScreen[y]===player&&
+				gameScreen[y+1]===player&&
+				gameScreen[y+2]===player
 			){
-				alert(winmsg);
-				return[true,player];
+				return[1,playerID];
 			}
 		}
 		for(x of [0,1,2]){
 			if(
-				gameScreen[x]===player_&&
-				gameScreen[x+3]===player_&&
-				gameScreen[x+6]===player_
+				gameScreen[x]===player&&
+				gameScreen[x+3]===player&&
+				gameScreen[x+6]===player
 			){
-				alert(winmsg);
-				return[true,player];
+				return[1,playerID];
 			}
 		}
 		for(pos of [0,2]){
 			if(
-				gameScreen[pos]===player_&&
-				gameScreen[4]===player_&&
-				gameScreen[8-pos]===player_
+				gameScreen[pos]===player&&
+				gameScreen[4]===player&&
+				gameScreen[8-pos]===player
 			){
-				alert(winmsg);
-				return[true,player];
+				return[1,player];
 			}
 		}
+		if(!gameScreen.includes(0)){return[0,1];}
+		else{return[0,0];}
 	}
 }
-function IndexGame({state,actions}){return[
+function IndexGame({state,actions,winArgs:[wined,tie,winBits]}){return[
+	node_dom("h1",{
+		innerText:!wined?
+			"TicTacToe":
+			tie?
+				"Keiner hat gewonnen":
+				`${state.playerNames[winBits[1]]} (${state.playerPointer[winBits[1]]}) hat gewonnen`,
+	}),
 	node_dom("p",{
-		innerText:`${state.playerNames[state.playerTurn]} ist dran und setzt ${state.playerPointer[state.playerTurn]}`,
+		innerText:!wined?
+			`${state.playerNames[state.playerTurn]} ist dran und setzt ${state.playerPointer[state.playerTurn]}`:
+			"Spiel ist zu ende!",
 	}),
 	node_dom("div[className=xoxGrid]",null,
 		state.gameScreen
@@ -104,26 +128,37 @@ function IndexGame({state,actions}){return[
 		.map((item,index)=>
 			node_dom("button",{
 				innerText:item,
-				disabled:item!==state.playerPointer[2],
+				disabled:item!==state.playerPointer[2]||wined,
 				onclick:()=>{
 					actions.editGameScreen([index,state.playerTurn+1]);
-					actions.toggelPlayer();
+					actions.togglePlayer();
 				},
 			}),
 		)
 	),
+	node_dom("button",{
+		innerText:wined?
+			"Neu Runde":
+			"egal, alles löschen!",
+		onclick:actions.resetGameScreen,
+	}),
 ]}
 
 init(()=>{
 	const [state,actions]=hook_model(model);
+
+	const winBits=checkForWin(state.gameScreen);
+	let showWinScreen=false;
+
+	if(winBits[0]){showWinScreen=true;}
+	else if(!winBits[0]&&winBits[1]){showWinScreen=true;}
+	const winArgs=[
+		showWinScreen,
+		!winBits[0]&&winBits[1],
+		winBits,
+	];
+
 	return[null,[
-		node_dom("h1[innerText=TicTacToe]"),
-		node(IndexGame,{state,actions}),
-		node_dom("button[innerText=Reset!]",{
-			onclick:actions.resetGameScreen,
-		}),
-		node_dom("button[innerText=checkForWin()]",{
-			onclick:()=>{checkForWin(state.gameScreen,state);}
-		})
+		node(IndexGame,{state,actions,winArgs}),
 	]];
 });
